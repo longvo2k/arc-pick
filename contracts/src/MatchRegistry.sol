@@ -66,7 +66,7 @@ contract MatchRegistry is IMatchRegistry, Ownable {
     function voidMatch(bytes32 matchId) external {
         if (msg.sender != oracle) revert NotOracle();
         Match storage m = _matches[matchId];
-        if (m.status == Status.Settled || m.status == Status.Voided) revert InvalidStatus();
+        if (m.status == Status.Unknown || m.status == Status.Settled || m.status == Status.Voided) revert InvalidStatus();
         m.status = Status.Voided;
         emit MatchVoided(matchId);
     }

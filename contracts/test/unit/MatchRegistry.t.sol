@@ -140,4 +140,10 @@ contract MatchRegistryTest is Test {
         (, , , IMatchRegistry.Status st, ) = reg.matches(M1);
         assertEq(uint8(st), uint8(IMatchRegistry.Status.Voided));
     }
+
+    function test_voidMatch_rejectsUnknown() public {
+        vm.prank(oracle);
+        vm.expectRevert(IMatchRegistry.InvalidStatus.selector);
+        reg.voidMatch(keccak256("NEVER-UPSERTED"));
+    }
 }
