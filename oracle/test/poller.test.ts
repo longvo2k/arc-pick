@@ -19,7 +19,7 @@ describe("runOnce", () => {
       now: () => new Date("2026-06-13T00:00:00Z"),
       knownResults: new Set<string>(),
     });
-    expect(upserts.length).toBe(2);
+    expect(upserts.length).toBe(1); // Only SCHEDULED triggers upsert
     expect(submits.length).toBe(1);
     expect(submits[0].matchId).toBeDefined();
     expect(submits[0].homeScore).toBe(2);
