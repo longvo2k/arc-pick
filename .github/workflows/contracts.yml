@@ -21,10 +21,10 @@ jobs:
         run: forge test --root contracts -vv
       - name: Coverage
         run: |
-          forge coverage --root contracts --report lcov --report-file ./lcov.info
+          forge coverage --root contracts --report lcov
           python3 - <<'PY'
           import re, sys, pathlib
-          lcov = pathlib.Path('lcov.info').read_text()
+          lcov = pathlib.Path('contracts/lcov.info').read_text()
           targets = {'MatchRegistry.sol', 'Market.sol', 'BetVault.sol', 'Oracle.sol', 'BetPaymaster.sol'}
           current, lf, lh = None, 0, 0
           failures = []

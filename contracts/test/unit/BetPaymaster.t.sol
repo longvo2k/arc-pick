@@ -109,4 +109,39 @@ contract BetPaymasterTest is TestBase {
         vm.expectRevert();
         paymaster.withdraw(1);
     }
+
+    function test_fund_pullsUSDCAndEmits() public {
+        address funder = address(0xFEED);
+        usdc.mint(funder, 500 * 1e6);
+        vm.prank(funder);
+        usdc.approve(address(paymaster), type(uint256).max);
+        uint256 vaultBefore = usdc.balanceOf(address(paymaster));
+        vm.expectEmit(true, false, false, true, address(paymaster));
+        emit IBetPaymaster.PaymasterFunded(funder, 100 * 1e6);
+        vm.prank(funder);
+        paymaster.fund(100 * 1e6);
+        assertEq(usdc.balanceOf(address(paymaster)) - vaultBefore, 100 * 1e6);
+    }
+
+    function test_withdraw_movesUSDCToOwner() public {
+        uint256 before = usdc.balanceOf(address(this));
+        vm.expectEmit(true, false, false, true, address(paymaster));
+        emit IBetPaymaster.PaymasterWithdrew(address(this), 50 * 1e6);
+        paymaster.withdraw(50 * 1e6);
+        assertEq(usdc.balanceOf(address(this)) - before, 50 * 1e6);
+    }
+
+    function test_setRelayer_updatesAndEmits() public {
+        address newRelayer = address(0xDEED);
+        vm.expectEmit(true, false, false, false, address(paymaster));
+        emit IBetPaymaster.RelayerUpdated(newRelayer);
+        paymaster.setRelayer(newRelayer);
+        assertEq(paymaster.relayer(), newRelayer);
+    }
+
+    function test_setRelayer_onlyOwner() public {
+        vm.prank(address(0xB0B));
+        vm.expectRevert();
+        paymaster.setRelayer(address(0xDEAD));
+    }
 }
