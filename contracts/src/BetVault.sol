@@ -82,10 +82,57 @@ contract BetVault is IBetVault {
         emit Placed(matchId, bettor, outcome, amount);
     }
 
-    // Stubs filled in by Task 13:
-    function settleMarket(bytes32) external pure { revert(); }
-    function claim(bytes32) external pure { revert(); }
-    function claimFor(bytes32, address) external pure { revert(); }
-    function refund(bytes32) external pure { revert(); }
-    function refundFor(bytes32, address) external pure { revert(); }
+    function settleMarket(bytes32 matchId) external nonReentrant {
+        (, , , IMatchRegistry.Status st, ) = REGISTRY.matches(matchId);
+        if (st != IMatchRegistry.Status.Closed) revert NotClosed();
+        (uint8 home, uint8 away, uint64 signedAt) = ORACLE.results(matchId);
+        if (signedAt == 0) revert ResultNotPosted();
+        uint8 outcome = home > away ? 0 : (home == away ? 1 : 2);
+        REGISTRY.markSettled(matchId, outcome);
+        emit Settled(matchId, outcome);
+    }
+
+    function claim(bytes32 matchId) external nonReentrant {
+        _claim(matchId, msg.sender);
+    }
+
+    function claimFor(bytes32 matchId, address user) external nonReentrant {
+        _claim(matchId, user);
+    }
+
+    function _claim(bytes32 matchId, address user) internal {
+        (, , , IMatchRegistry.Status st, uint8 win) = REGISTRY.matches(matchId);
+        if (st != IMatchRegistry.Status.Settled) revert NotSettled();
+        if (claimed[matchId][user]) revert AlreadyClaimed();
+        uint128 userStakeWin = MARKET.userStake(matchId, user, win);
+        if (userStakeWin == 0) revert NoStakeOnWinningOutcome();
+        uint256 winningPool = MARKET.outcomeStake(matchId, win);
+        uint256 totalPool = MARKET.totalPool(matchId);
+        uint256 payout = (uint256(userStakeWin) * totalPool) / winningPool;
+        claimed[matchId][user] = true;
+        require(USDC.transfer(user, payout), "transfer failed");
+        emit Claimed(matchId, user, payout);
+    }
+
+    function refund(bytes32 matchId) external nonReentrant {
+        _refund(matchId, msg.sender);
+    }
+
+    function refundFor(bytes32 matchId, address user) external nonReentrant {
+        _refund(matchId, user);
+    }
+
+    function _refund(bytes32 matchId, address user) internal {
+        (, , uint64 kickoff, IMatchRegistry.Status st, ) = REGISTRY.matches(matchId);
+        bool eligible = (st == IMatchRegistry.Status.Voided) ||
+                        (st != IMatchRegistry.Status.Settled && block.timestamp >= kickoff + REFUND_AFTER);
+        if (!eligible) revert NotSettledOrVoided();
+        if (refunded[matchId][user]) revert AlreadyRefunded();
+        if (claimed[matchId][user]) revert AlreadyClaimed();
+        uint256 amount = MARKET.userTotalStake(matchId, user);
+        if (amount == 0) revert NoStake();
+        refunded[matchId][user] = true;
+        require(USDC.transfer(user, amount), "transfer failed");
+        emit Refunded(matchId, user, amount);
+    }
 }
