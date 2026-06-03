@@ -1,0 +1,7 @@
+packages:
+  - "sdk"
+  - "relay"
+  - "oracle"
+  - "keeper"
+  - "agent"
+  - "demo"
