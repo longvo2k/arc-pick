@@ -12,8 +12,6 @@ out/
 contracts/cache/
 contracts/out/
 contracts/broadcast/
-contracts/lib/**
-!contracts/lib/.gitkeep
 
 # Docker
 .volumes/
