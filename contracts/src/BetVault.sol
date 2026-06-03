@@ -58,10 +58,31 @@ contract BetVault is IBetVault {
         if (block.timestamp >= kickoff) revert KickoffPassed();
     }
 
-    // Stubs filled in by Tasks 12, 13, 14:
-    function placeBetFromAllowance(bytes32, uint8, uint128, address) external pure { revert(); }
-    function authorizeAgent(address) external pure { revert(); }
-    function deauthorizeAgent(address) external pure { revert(); }
+    function authorizeAgent(address agent) external {
+        authorizedAgent[msg.sender][agent] = true;
+        emit AgentAuthorized(msg.sender, agent);
+    }
+
+    function deauthorizeAgent(address agent) external {
+        authorizedAgent[msg.sender][agent] = false;
+        emit AgentDeauthorized(msg.sender, agent);
+    }
+
+    function placeBetFromAllowance(
+        bytes32 matchId,
+        uint8 outcome,
+        uint128 amount,
+        address bettor
+    ) external nonReentrant {
+        if (!authorizedAgent[bettor][msg.sender]) revert NotAuthorizedAgent();
+        _assertOpenPreKickoff(matchId);
+        if (outcome > 2) revert InvalidOutcome();
+        PERMIT2.transferFrom(bettor, address(this), uint160(amount), address(USDC));
+        MARKET.recordStake(matchId, bettor, outcome, amount);
+        emit Placed(matchId, bettor, outcome, amount);
+    }
+
+    // Stubs filled in by Task 13:
     function settleMarket(bytes32) external pure { revert(); }
     function claim(bytes32) external pure { revert(); }
     function claimFor(bytes32, address) external pure { revert(); }
