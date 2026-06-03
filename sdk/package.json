@@ -1,0 +1,41 @@
+{
+  "name": "@arc-pick/sdk",
+  "version": "0.0.0",
+  "type": "module",
+  "private": false,
+  "license": "MIT",
+  "description": "TypeScript SDK for the arc-pick WC 2026 prediction market on Arc Testnet.",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" },
+    "./core": { "import": "./dist/core/index.js", "types": "./dist/core/index.d.ts" },
+    "./server": { "import": "./dist/server/index.js", "types": "./dist/server/index.d.ts" },
+    "./agent": { "import": "./dist/agent/index.js", "types": "./dist/agent/index.d.ts" },
+    "./adapters": { "import": "./dist/adapters/index.js", "types": "./dist/adapters/index.d.ts" }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "viem": "^2.21.0",
+    "@anthropic-ai/sdk": "^0.32.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@vitest/coverage-v8": "^2.1.0",
+    "msw": "^2.4.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "engines": { "node": ">=20.11.0" }
+}

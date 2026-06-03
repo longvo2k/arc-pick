@@ -8,6 +8,9 @@
     "build:contracts": "forge build --root contracts",
     "test:contracts": "forge test --root contracts -vv",
     "coverage:contracts": "forge coverage --root contracts --report summary --report lcov",
+    "build:sdk": "pnpm --filter @arc-pick/sdk build",
+    "test:sdk": "pnpm --filter @arc-pick/sdk test",
+    "coverage:sdk": "pnpm --filter @arc-pick/sdk coverage",
     "compose:up": "docker compose up -d",
     "compose:down": "docker compose down -v"
   }
