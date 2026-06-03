@@ -1,0 +1,35 @@
+name: services
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  services:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Build SDK (services depend on it)
+        run: pnpm --filter @arc-pick/sdk build
+      - name: Typecheck
+        run: |
+          pnpm --filter @arc-pick/relay typecheck
+          pnpm --filter @arc-pick/oracle typecheck
+          pnpm --filter @arc-pick/keeper typecheck
+          pnpm --filter @arc-pick/agent typecheck
+      - name: Build
+        run: pnpm build:services
+      - name: Test
+        run: pnpm test:services
