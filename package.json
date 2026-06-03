@@ -11,6 +11,8 @@
     "build:sdk": "pnpm --filter @arc-pick/sdk build",
     "test:sdk": "pnpm --filter @arc-pick/sdk test",
     "coverage:sdk": "pnpm --filter @arc-pick/sdk coverage",
+    "build:services": "pnpm -r --filter './relay' --filter './oracle' --filter './keeper' --filter './agent' build",
+    "test:services": "pnpm -r --filter './relay' --filter './oracle' --filter './keeper' --filter './agent' test",
     "compose:up": "docker compose up -d",
     "compose:down": "docker compose down -v"
   }
