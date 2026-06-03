@@ -54,3 +54,89 @@ services:
       - .:/work
     entrypoint: ["bash", "compose-init/seed.sh"]
     restart: "no"
+
+  relay:
+    build:
+      context: .
+      dockerfile: relay/Dockerfile
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+    environment:
+      RPC_URL: http://anvil:8545
+      CHAIN_ID: "5042002"
+      BET_PAYMASTER_ADDRESS: ${BET_PAYMASTER_ADDRESS}
+      RELAYER_PRIVATE_KEY: ${RELAYER_PRIVATE_KEY:-0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a}
+      PORT: "7787"
+    ports: ["7787:7787"]
+    volumes: [".:/work"]
+    restart: unless-stopped
+
+  oracle:
+    build:
+      context: .
+      dockerfile: oracle/Dockerfile
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+    environment:
+      RPC_URL: http://anvil:8545
+      CHAIN_ID: "5042002"
+      MATCH_REGISTRY_ADDRESS: ${MATCH_REGISTRY_ADDRESS}
+      ORACLE_ADDRESS: ${ORACLE_ADDRESS}
+      ORACLE_SIGNER_PRIVATE_KEY: ${ORACLE_SIGNER_PRIVATE_KEY}
+      ORACLE_SUBMITTER_PRIVATE_KEY: ${ORACLE_SUBMITTER_PRIVATE_KEY}
+      FOOTBALL_DATA_API_BASE: ${FOOTBALL_DATA_API_BASE:-https://api.football-data.org/v4}
+      FOOTBALL_DATA_API_KEY: ${FOOTBALL_DATA_API_KEY:-}
+      POLL_INTERVAL_SECONDS: "600"
+    volumes: [".:/work"]
+    restart: unless-stopped
+
+  keeper:
+    build:
+      context: .
+      dockerfile: keeper/Dockerfile
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+    environment:
+      RPC_URL: http://anvil:8545
+      CHAIN_ID: "5042002"
+      MATCH_REGISTRY_ADDRESS: ${MATCH_REGISTRY_ADDRESS}
+      ORACLE_ADDRESS: ${ORACLE_ADDRESS}
+      BET_VAULT_ADDRESS: ${BET_VAULT_ADDRESS}
+      KEEPER_PRIVATE_KEY: ${KEEPER_PRIVATE_KEY}
+      KNOWN_MATCH_IDS: ${KNOWN_MATCH_IDS:-}
+      TICK_SECONDS: "60"
+    volumes: [".:/work"]
+    restart: unless-stopped
+
+  agent:
+    build:
+      context: .
+      dockerfile: agent/Dockerfile
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+    environment:
+      RPC_URL: http://anvil:8545
+      CHAIN_ID: "5042002"
+      USDC_ADDRESS: ${USDC_ADDRESS}
+      PERMIT2_ADDRESS: ${PERMIT2_ADDRESS}
+      MATCH_REGISTRY_ADDRESS: ${MATCH_REGISTRY_ADDRESS}
+      MARKET_ADDRESS: ${MARKET_ADDRESS}
+      BET_VAULT_ADDRESS: ${BET_VAULT_ADDRESS}
+      ORACLE_ADDRESS: ${ORACLE_ADDRESS}
+      BET_PAYMASTER_ADDRESS: ${BET_PAYMASTER_ADDRESS}
+      PLATFORM_PRIVATE_KEY: ${PLATFORM_PRIVATE_KEY}
+      MODEL_PROVIDER_WALLET: ${MODEL_PROVIDER_WALLET}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      MODEL_NAME: ${MODEL_NAME:-claude-haiku-4-5-20251001}
+      PER_CALL_USDC: ${PER_CALL_USDC:-1000}
+      TICK_SECONDS: ${TICK_SECONDS:-60}
+      KNOWN_MATCH_IDS: ${KNOWN_MATCH_IDS:-}
+      SEED_BOTS: ${SEED_BOTS:-[]}
+      PORT: "7788"
+    ports: ["7788:7788"]
+    volumes: [".:/work"]
+    restart: unless-stopped
