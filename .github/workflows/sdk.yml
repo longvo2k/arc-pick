@@ -1,0 +1,31 @@
+name: sdk
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm --filter @arc-pick/sdk typecheck
+      - name: Build
+        run: pnpm --filter @arc-pick/sdk build
+      - name: Test
+        run: pnpm --filter @arc-pick/sdk test
+      - name: Coverage
+        run: pnpm --filter @arc-pick/sdk coverage
