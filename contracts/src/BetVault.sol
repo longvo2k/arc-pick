@@ -7,8 +7,9 @@ import {IPermit2} from "./interfaces/IPermit2.sol";
 import {IMatchRegistry} from "./interfaces/IMatchRegistry.sol";
 import {IMarket} from "./interfaces/IMarket.sol";
 import {IOracle} from "./interfaces/IOracle.sol";
+import {Ownable} from "./Ownable.sol";
 
-contract BetVault is IBetVault {
+contract BetVault is IBetVault, Ownable {
     IERC20 public immutable USDC;
     IPermit2 public immutable PERMIT2;
     IMatchRegistry public immutable REGISTRY;
@@ -20,6 +21,7 @@ contract BetVault is IBetVault {
     mapping(bytes32 => mapping(address => bool)) public claimed;
     mapping(bytes32 => mapping(address => bool)) public refunded;
     mapping(address => mapping(address => bool)) public authorizedAgent;
+    address public paymaster;
 
     uint256 private _locked;
     modifier nonReentrant() {
@@ -80,6 +82,19 @@ contract BetVault is IBetVault {
         PERMIT2.transferFrom(bettor, address(this), uint160(amount), address(USDC));
         MARKET.recordStake(matchId, bettor, outcome, amount);
         emit Placed(matchId, bettor, outcome, amount);
+    }
+
+    function placeBetSponsored(bytes32 matchId, uint8 outcome, uint128 amount, address bettor) external nonReentrant {
+        if (msg.sender != paymaster) revert NotPaymaster();
+        _assertOpenPreKickoff(matchId);
+        if (outcome > 2) revert InvalidOutcome();
+        require(USDC.transferFrom(paymaster, address(this), amount), "paymaster transfer failed");
+        MARKET.recordStake(matchId, bettor, outcome, amount);
+        emit Placed(matchId, bettor, outcome, amount);
+    }
+
+    function setPaymaster(address p) external onlyOwner {
+        paymaster = p;
     }
 
     function settleMarket(bytes32 matchId) external nonReentrant {

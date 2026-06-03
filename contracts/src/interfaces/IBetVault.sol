@@ -25,6 +25,7 @@ interface IBetVault {
     error InvalidOutcome();
     error ResultNotPosted();
     error Reentrancy();
+    error NotPaymaster();
 
     function placeBet(
         bytes32 matchId,
@@ -35,6 +36,9 @@ interface IBetVault {
     ) external;
 
     function placeBetFromAllowance(bytes32 matchId, uint8 outcome, uint128 amount, address bettor) external;
+    function placeBetSponsored(bytes32 matchId, uint8 outcome, uint128 amount, address bettor) external;
+    function setPaymaster(address paymaster) external;
+    function paymaster() external view returns (address);
     function authorizeAgent(address agent) external;
     function deauthorizeAgent(address agent) external;
     function authorizedAgent(address owner, address agent) external view returns (bool);
