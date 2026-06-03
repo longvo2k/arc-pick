@@ -1,0 +1,6 @@
+FROM ghcr.io/foundry-rs/foundry:latest
+USER root
+RUN apk add --no-cache bash curl jq git
+WORKDIR /work
+COPY . /work
+ENTRYPOINT ["bash"]
